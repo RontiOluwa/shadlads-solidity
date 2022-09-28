@@ -1,0 +1,38 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/Transport.sol": {
+      "content": "// SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.1;\n\nimport \"@openzeppelin/contracts/utils/Counters.sol\";\n\ncontract Transport {\n    using Counters for Counters.Counter;\n\n    Counters.Counter private _serviceWorkerCount; //total number of Services\n    Counters.Counter private _carCount; //total number of Cars\n    Counters.Counter private _inspectionCount; //total number of Inspection\n\n    address owner;\n    // Cars public cars;\n\n    struct Cars {\n        uint256 itemId;\n        uint256 VIN;\n        string name;\n        string color;\n    }\n\n    struct Inspection {\n        uint256 itemId;\n        uint256 VIN;\n        string date;\n    }\n\n    event CarsItem(uint256 itemId, uint256 VIN, string name, string color);\n\n    event InspectionItem(uint256 _itemId, uint256 VIN, string date);\n\n    mapping(address => uint256) public serviceWorker;\n    mapping(uint256 => Cars) public cars;\n    mapping(uint256 => Inspection) public inspection;\n\n    constructor(address _owner) {\n        owner = _owner;\n    }\n\n    modifier onlyOwner() {\n        require(msg.sender == owner);\n        _;\n    }\n\n    modifier onlyServiceWorker() {\n        require(serviceWorker[msg.sender] != 0, \"No such User\");\n        _;\n    }\n\n    function addWorker(address _addr) public onlyOwner {\n        _serviceWorkerCount.increment(); //add 1 to the total number of items ever created\n        uint256 itemId = _serviceWorkerCount.current();\n        serviceWorker[_addr] = itemId;\n    }\n\n    function addCar(\n        uint256 _VIN,\n        string memory _name,\n        string memory _color\n    ) public onlyServiceWorker {\n        _carCount.increment(); //add 1 to the total number of items ever created\n        uint256 itemId = _carCount.current();\n\n        cars[itemId] = Cars(itemId, _VIN, _name, _color);\n\n        emit CarsItem(itemId, _VIN, _name, _color);\n    }\n\n    function addInspection(uint256 _VIN, string memory _date)\n        public\n        onlyServiceWorker\n    {\n        _inspectionCount.increment(); //add 1 to the total number of items ever created\n        uint256 itemId = _inspectionCount.current();\n\n        inspection[itemId] = Inspection(itemId, _VIN, _date);\n\n        emit InspectionItem(itemId, _VIN, _date);\n    }\n\n    function getAllCars() public view returns (Cars[] memory) {\n        uint256 count = _carCount.current();\n        uint256 index = 0;\n\n        Cars[] memory items = new Cars[](count);\n\n        for (uint256 i = 0; i < count; i++) {\n            uint256 currentId = cars[i + 1].itemId;\n            Cars storage currentItem = cars[currentId];\n            items[index] = currentItem;\n            index += 1;\n        }\n        return items;\n    }\n\n    function getCar(uint256 vin) public view returns (Cars[] memory) {\n        uint256 count = _carCount.current();\n        uint256 index = 0;\n\n        Cars[] memory items = new Cars[](count);\n\n        for (uint256 i = 0; i < count; i++) {\n            if (cars[i + 1].VIN == vin) {\n                uint256 currentId = cars[i + 1].itemId;\n                Cars storage currentItem = cars[currentId];\n                items[index] = currentItem;\n                index += 1;\n            }\n        }\n        return items;\n    }\n\n    function getAllInspection() public view returns (Inspection[] memory) {\n        uint256 count = _inspectionCount.current();\n        uint256 index = 0;\n\n        Inspection[] memory items = new Inspection[](count);\n\n        for (uint256 i = 0; i < count; i++) {\n            uint256 currentId = inspection[i + 1].itemId;\n            Inspection storage currentItem = inspection[currentId];\n            items[index] = currentItem;\n            index += 1;\n        }\n        return items;\n    }\n\n    function getServiceWorkerCount() public view returns (uint256) {\n        uint256 count = _serviceWorkerCount.current();\n        return count;\n    }\n}\n"
+    },
+    "@openzeppelin/contracts/utils/Counters.sol": {
+      "content": "// SPDX-License-Identifier: MIT\n// OpenZeppelin Contracts v4.4.1 (utils/Counters.sol)\n\npragma solidity ^0.8.0;\n\n/**\n * @title Counters\n * @author Matt Condon (@shrugs)\n * @dev Provides counters that can only be incremented, decremented or reset. This can be used e.g. to track the number\n * of elements in a mapping, issuing ERC721 ids, or counting request ids.\n *\n * Include with `using Counters for Counters.Counter;`\n */\nlibrary Counters {\n    struct Counter {\n        // This variable should never be directly accessed by users of the library: interactions must be restricted to\n        // the library's function. As of Solidity v0.5.2, this cannot be enforced, though there is a proposal to add\n        // this feature: see https://github.com/ethereum/solidity/issues/4637\n        uint256 _value; // default: 0\n    }\n\n    function current(Counter storage counter) internal view returns (uint256) {\n        return counter._value;\n    }\n\n    function increment(Counter storage counter) internal {\n        unchecked {\n            counter._value += 1;\n        }\n    }\n\n    function decrement(Counter storage counter) internal {\n        uint256 value = counter._value;\n        require(value > 0, \"Counter: decrement overflow\");\n        unchecked {\n            counter._value = value - 1;\n        }\n    }\n\n    function reset(Counter storage counter) internal {\n        counter._value = 0;\n    }\n}\n"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": false,
+      "runs": 200
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}
